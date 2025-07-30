@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Books</title>
+</head>
+<body>
+    <h2>📚 Available Books</h2>
+    {% if books %}
+        {% for book in books %}
+            <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+                <img src="{{ book['image'] }}" width="100">
+                <h3>{{ book['name'] }}</h3>
+                <p><strong>Author:</strong> {{ book['author'] }}</p>
+                <p><strong>Price:</strong> ₹{{ book['price'] }}</p>
+                <p>{{ book['description'] }}</p>
+                <p><strong>Status:</strong> {{ 'Available' if book['available'] else 'Not Available' }}</p>
+                
+                {% if book['available'] %}
+                    <form method="GET" action="/order/{{ book['id'] }}">
+                        <button type="submit">🛒 Order Now</button>
+                    </form>
+                {% else %}
+                    <p><em>Not available for ordering</em></p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No books available.</p>
+    {% endif %}
+</body>
+</html>
