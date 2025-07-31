@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Cart</title>
+    <style>
+        .book {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .book img {
+            width: 100px;
+            height: auto;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>🛒 Your Cart</h2>
+    <div id="cart-items"></div>
+
+    <script>
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        const container = document.getElementById('cart-items');
+
+        if (cart.length === 0) {
+            container.innerHTML = "<p>Your cart is empty.</p>";
+        } else {
+            cart.forEach(book => {
+                const item = document.createElement('div');
+                item.className = 'book';
+                item.innerHTML = `
+                    <img src="${book.image}" alt="${book.name}">
+                    <div>
+                        <h3>${book.name}</h3>
+                        <p><strong>Author:</strong> ${book.author}</p>
+                        <p><strong>Price:</strong> ₹${book.price}</p>
+                        <button onclick="removeFromCart(${book.id})">🗑️ Remove</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function removeFromCart(bookId) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart = cart.filter(book => book.id !== bookId);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            location.reload(); // Refresh to update the cart
+        }
+    </script>
+</body>
+</html>

@@ -2,9 +2,42 @@
 <html>
 <head>
     <title>Books</title>
+    <script>
+        function addToCart(bookId, name, author, price, image) {
+            // Get existing cart or initialize empty array
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // Check if item already in cart
+            const exists = cart.find(item => item.id === bookId);
+            if (!exists) {
+                cart.push({ id: bookId, name: name, author: author, price: price, image: image });
+                localStorage.setItem('cart', JSON.stringify(cart));
+                alert(name + " added to cart!");
+            } else {
+                alert(name + " is already in the cart.");
+            }
+        }
+
+        function viewCart() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cart.length === 0) {
+                alert("Your cart is empty.");
+                return;
+            }
+
+            let summary = "Cart Items:\n\n";
+            cart.forEach(item => {
+                summary += `📖 ${item.name} by ${item.author} - ₹${item.price}\n`;
+            });
+            alert(summary);
+        }
+    </script>
 </head>
 <body>
     <h2>📚 Available Books</h2>
+    <button onclick="window.location.href='/cart'">🛍️ View Cart</button>
+    <hr>
+
     {% if books %}
         {% for book in books %}
             <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
@@ -15,8 +48,12 @@
                 <p>{{ book['description'] }}</p>
                 <p><strong>Status:</strong> {{ 'Available' if book['available'] else 'Not Available' }}</p>
                 
+                <button onclick="addToCart({{ book['id'] }}, '{{ book['name'] }}', '{{ book['author'] }}', {{ book['price'] }}, '{{ book['image'] }}')">
+                    ➕ Add to Cart
+                </button>
+
                 {% if book['available'] %}
-                    <form method="GET" action="/order/{{ book['id'] }}">
+                    <form method="GET" action="/order/{{ book['id'] }}" style="margin-top:5px;">
                         <button type="submit">🛒 Order Now</button>
                     </form>
                 {% else %}

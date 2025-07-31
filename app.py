@@ -196,6 +196,10 @@ def signup():
             con.close()
     return render_template('signup.html')
 
+@app.route('/cart')
+def cart():
+    return render_template('cart.html')
+
 
 @app.route("/admin/edit_book", methods=["POST"])
 def edit_book():
