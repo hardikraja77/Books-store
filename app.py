@@ -80,6 +80,19 @@ def admin():
     return render_template('admin.html', orders=orders)
 
 
+@app.route("/admin/books")
+def admin_books():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM books").fetchall()
+    conn.close()
+
+    # Convert each sqlite3.Row to dictionary
+    books = [dict(row) for row in rows]
+
+    return render_template("books.html", books=books)
+
+
+
 # Create admin manually
 @app.route('/create-admin')
 def create_admin():
@@ -184,57 +197,41 @@ def signup():
     return render_template('signup.html')
 
 
-@app.route("/admin/delete_book/<int:book_id>", methods=["POST"])
-def delete_book(book_id):
-    con = get_db()
-    cur = con.cursor()
-    cur.execute("DELETE FROM books WHERE id = ?", (book_id,))
-    con.commit()
-    con.close()
-    return redirect("/admin")
-
-@app.route("/admin/edit_book/<int:book_id>", methods=["GET", "POST"])
-def edit_book(book_id):
-    con = get_db()
-    cur = con.cursor()
-
-    if request.method == "POST":
-        name = request.form["name"]
-        author = request.form["author"]
-        price = request.form["price"]
-        description = request.form["description"]
-        available = request.form["available"]
-
-        cur.execute("""
-            UPDATE books 
-            SET name=?, author=?, price=?, description=?, available=?
-            WHERE id=?
-        """, (name, author, price, description, available, book_id))
-
-        con.commit()
-        con.close()
-        return redirect("/admin")
+@app.route("/admin/edit_book", methods=["POST"])
+def edit_book():
+    book_id = request.form["id"]
+    name = request.form["name"]
+    author = request.form["author"]
+    description = request.form["description"]
     
+    
+    image = request.files["image"]
+    image_path = None
+    if image and image.filename != "":
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        image_path = f"/{app.config['UPLOAD_FOLDER']}/{filename}"
+
+
+    conn = get_db()
+    if image_path:
+        conn.execute("UPDATE books SET name=?, author=?, description=?, image=? WHERE id=?",
+                     (name, author, description, image_path, book_id))
     else:
-        cur.execute("SELECT * FROM books WHERE id=?", (book_id,))
-        book = cur.fetchone()
-        con.close()
+        conn.execute("UPDATE books SET name=?, author=?, description=? WHERE id=?",
+                     (name, author, description, book_id))
+    conn.commit()
+    conn.close()
+    return redirect("/admin/books")
 
-        if book:
-            # Convert sqlite Row to dictionary if needed
-            book_dict = {
-                "id": book[0],
-                "image_path": book[1],
-                "name": book[2],
-                "author": book[3],
-                "price": book[4],
-                "description": book[5],
-                "available": book[6]
-            }
-            return render_template("edit_book.html", book=book_dict)
-        else:
-            return "Book not found", 404
-
+@app.route("/admin/delete_book", methods=["POST"])
+def delete_book():
+    book_id = request.form["id"]
+    conn = get_db()
+    conn.execute("DELETE FROM books WHERE id=?", (book_id,))
+    conn.commit()
+    conn.close()
+    return redirect("/admin/books")
 
 if __name__ == '__main__':
     app.run(debug=True)
